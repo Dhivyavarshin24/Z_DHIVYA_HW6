@@ -1,0 +1,86 @@
+CLASS z_dhivya_hw6 DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+
+    INTERFACES if_oo_adt_classrun .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+ENDCLASS.
+
+
+
+CLASS z_dhivya_hw6 IMPLEMENTATION.
+
+
+  METHOD if_oo_adt_classrun~main.
+
+*  Question 1: The "Smart" Flight Search (Tables & Performance)
+*   DATA(lo_manager) = NEW lcl_flight_manager( ).
+*    lo_manager->fill_flights( ).
+*    lo_manager->display_all( io_out = out ).
+*    lo_manager->find_by_carrier(
+*      iv_carrier = 'AA'
+*      io_out     = out ).
+*    lo_manager->find_by_carrier(
+*      iv_carrier = 'SQ'
+*      io_out     = out ).
+*    lo_manager->find_by_carrier(
+*      iv_carrier = 'UA'
+*      io_out     = out ).
+
+*  Question 2: The Data Cleaner Utility (Character Processing & Conversions)
+*  DATA(lv_dirty) = ` 00012345;SOFTWARE_ENGINEER;20230101 `.
+*
+*  DATA:
+*  lv_id_string TYPE string,
+*  lv_role      TYPE string,
+*  lv_date_str  TYPE string,
+*  lv_empid     TYPE i,
+*  lv_date      TYPE d.
+*   CONDENSE lv_dirty.
+*   SPLIT lv_dirty AT ';'
+*   INTO lv_id_string
+*     lv_role
+*     lv_date_str.
+*   lv_empid = lv_id_string.
+*   lv_date = lv_date_str.
+*
+*out->write( |Employee { lv_empid } started as a { lv_role } on { lv_date DATE = USER }| ).
+
+*Question 3: Advanced SQL Aggregation (ABAP SQL & Code Pushdown)
+*  select from /dmo/flight
+*  fields carrier_id,
+*  sum( price ) as total_price,
+*  cast( avg( price ) as dec( 15,2 ) ) as avg_price,
+*  count( * ) as num_of_flights
+*  group by carrier_id
+*  into table @data(res).
+*  out->write( res ).
+
+*Question 4: The "Summary" Operator (Local Classes & Structured Data)
+TYPES: BEGIN OF st_sales,
+         product Type string,
+         Amount Type p length 10 Decimals 2,
+        END OF st_sales.
+     TYPES tt_sales TYPE STANDARD TABLE OF st_sales WITH Empty key.
+
+      TYPES:BEGIN OF st_result,
+            grand_total Type p length 10 Decimals 2,
+           END OF st_result.
+
+       DATA(It_sales) = VALUE tt_sales(
+                               ( product = 'Laptop'   amount ='50000.00' )
+                               ( product = 'Mouse'    amount = '1000.00')
+                               ( product = 'Keyboard' amount = ' 2000.00' )
+                               ( product = 'Monitor'  amount = '15000.00' )
+                                ).
+
+DATA(lo_sales) = NEW lcl_sales( ).
+DATA(ls_result) = lo_sales->get_total( It_sales ).
+out->write( ls_result ).
+
+  ENDMETHOD.
+ENDCLASS.

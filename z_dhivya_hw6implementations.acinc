@@ -1,0 +1,122 @@
+*"* use this source file for the definition and implementation of
+*"* local helper classes, interface definitions and type
+*"* declarations
+
+*Question 1: The "Smart" Flight Search (Tables & Performance)
+*TYPES: BEGIN OF ty_flight,
+*         carrier_id    TYPE /dmo/carrier_id,
+*         connection_id TYPE /dmo/connection_id,
+*         flight_date   TYPE /dmo/flight_date,
+*       END OF ty_flight.
+*       TYPES ty_flight_table TYPE STANDARD TABLE OF ty_flight
+*        WITH NON-UNIQUE KEY carrier_id connection_id
+*        WITH NON-UNIQUE SORTED KEY sk_carrier
+*             COMPONENTS carrier_id.
+*class lcl_flight_manager definition.
+*
+*  public section.
+*
+*    METHODS fill_flights.
+*
+*    METHODS find_by_carrier
+*      IMPORTING
+*        iv_carrier TYPE /dmo/carrier_id
+*        io_out     TYPE REF TO if_oo_adt_classrun_out.
+*
+*    METHODS display_all
+*      IMPORTING
+*        io_out TYPE REF TO if_oo_adt_classrun_out.
+*  protected section.
+*  private section.
+*   DATA mt_flights TYPE ty_flight_table.
+*endclass.
+*class lcl_flight_manager implementation.
+* METHOD fill_flights.
+*    mt_flights = VALUE #(
+*      ( carrier_id = 'LH' connection_id = '0400'
+*        flight_date = '20231001' )
+*      ( carrier_id = 'LH' connection_id = '0401'
+*        flight_date = '20231002' )
+*      ( carrier_id = 'LH' connection_id = '0402'
+*        flight_date = '20231003' )
+*      ( carrier_id = 'AA' connection_id = '0017'
+*        flight_date = '20231001' )
+*      ( carrier_id = 'AA' connection_id = '0018'
+*        flight_date = '20231002' )
+*      ( carrier_id = 'AA' connection_id = '0019'
+*        flight_date = '20231003' )
+*      ( carrier_id = 'SQ' connection_id = '0001'
+*        flight_date = '20231001' )
+*      ( carrier_id = 'SQ' connection_id = '0002'
+*        flight_date = '20231002' )
+*      ( carrier_id = 'UA' connection_id = '0100'
+*        flight_date = '20231001' )
+*      ( carrier_id = 'UA' connection_id = '0101'
+*        flight_date = '20231002' )
+*    ).
+*  ENDMETHOD.
+*  METHOD find_by_carrier.
+*    DATA ls_flight TYPE ty_flight.
+*    io_out->write( '====================================' ).
+*    io_out->write( |Searching Carrier: { iv_carrier }|   ).
+*    io_out->write( '====================================' ).
+*    " READ TABLE using secondary sorted key
+*    READ TABLE mt_flights
+*      INTO ls_flight
+*      WITH TABLE KEY sk_carrier
+*      COMPONENTS carrier_id = iv_carrier.
+*    IF sy-subrc = 0.
+*      io_out->write( 'Flight Found via Secondary Key!'      ).
+*      io_out->write( '------------------------------------' ).
+*      io_out->write( |Carrier    : { ls_flight-carrier_id    }| ).
+*      io_out->write( |Connection : { ls_flight-connection_id }| ).
+*      io_out->write( |Date       : { ls_flight-flight_date   }| ).
+*      io_out->write( '------------------------------------' ).
+*    ELSE.
+*      io_out->write( |No flight found for: { iv_carrier }|  ).
+*    ENDIF.
+*  ENDMETHOD.
+*  METHOD display_all.
+*    io_out->write( '====================================' ).
+*    io_out->write( 'All Flights in Table:'               ).
+*    io_out->write( '====================================' ).
+*    LOOP AT mt_flights INTO DATA(ls_flight).
+*      io_out->write( |{ ls_flight-carrier_id    } | &&
+*                     |{ ls_flight-connection_id } | &&
+*                     |{ ls_flight-flight_date   }| ).
+*    ENDLOOP.
+*  io_out->write( '====================================' ).
+*  ENDMETHOD.
+*ENDCLASS.
+
+*Question 4: The "Summary" Operator (Local Classes & Structured Data)
+TYPES: BEGIN OF st_sales,
+         product Type string,
+         Amount Type p length 10 Decimals 2,
+        END OF st_sales.
+     TYPES tt_sales TYPE STANDARD TABLE OF st_sales WITH Empty key.
+
+      TYPES:BEGIN OF st_result,
+            grand_total Type p length 10 Decimals 2,
+           END OF st_result.
+
+class lcl_sales definition .
+
+  public section.
+  Methods get_total
+    Importing It_sales TYPE tt_sales
+     RETURNING VALUE(rs_result) TYPE st_result.
+
+  protected section.
+  private section.
+
+endclass.
+
+class lcl_sales implementation.
+METHOD get_total.
+   rs_result = REDUCE st_result(
+                             INIT totals TYPE st_result
+                             For sale IN It_sales
+                             NEXT totals-grand_total += sale-amount ).
+  ENDMETHOD.
+endclass.
